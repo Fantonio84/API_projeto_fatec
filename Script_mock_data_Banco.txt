@@ -1,0 +1,232 @@
+// ==========================================
+// 1. CONDOMÍNIOS
+// ==========================================
+const cond1Id = new ObjectId();
+const cond2Id = new ObjectId();
+const cond3Id = new ObjectId();
+
+db.condominios.insertMany([
+  {
+    _id: cond1Id,
+    nome: "Residencial Parque das Flores",
+    cnpj: "12.345.678/0001-90",
+    email: "contato@parquedasflores.com.br",
+    telefone: "(11) 98765-4321",
+    senhaAdmHash: "$2b$10$abcdef1234567890parquedasflores",
+    codigoAcessoMoradores: "FLORES2026"
+  },
+  {
+    _id: cond2Id,
+    nome: "Condomínio Solar da Serra",
+    cnpj: "98.765.432/0001-10",
+    email: "adm@solardaserra.com.br",
+    telefone: "(11) 91234-5678",
+    senhaAdmHash: "$2b$10$abcdef1234567890solardaserra",
+    codigoAcessoMoradores: "SOLAR778"
+  },
+  {
+    _id: cond3Id,
+    nome: "Vila Verde Residencial Club",
+    cnpj: "45.678.910/0001-23",
+    email: "sindico@vilaverdeclub.com",
+    telefone: "(11) 97777-8888",
+    senhaAdmHash: "$2b$10$abcdef1234567890vilaverdeclub",
+    codigoAcessoMoradores: "VVERDE99"
+  }
+]);
+
+// ==========================================
+// 2. CATEGORIAS
+// ==========================================
+const catEletricaId = new ObjectId();
+const catHidraulicaId = new ObjectId();
+const catPinturaId = new ObjectId();
+
+db.categorias.insertMany([
+  {
+    _id: catEletricaId,
+    nome: "Elétrica",
+    slug: "eletrica",
+    icone: "zap"
+  },
+  {
+    _id: catHidraulicaId,
+    nome: "Hidráulica",
+    slug: "hidraulica",
+    icone: "droplet"
+  },
+  {
+    _id: catPinturaId,
+    nome: "Pintura",
+    slug: "pintura",
+    icone: "paint-brush"
+  }
+]);
+
+// ==========================================
+// 3. MORADORES
+// ==========================================
+const morador1Id = new ObjectId();
+const morador2Id = new ObjectId();
+const morador3Id = new ObjectId();
+
+db.moradores.insertMany([
+  {
+    _id: morador1Id,
+    condominioId: cond1Id,
+    nome: "Carlos Eduardo Silva",
+    telefone: "(11) 99111-2222",
+    lote: "14",
+    quadra: "B",
+    senha: "$2b$10$hashSenhaCarlos123",
+    status: "aprovado"
+  },
+  {
+    _id: morador2Id,
+    condominioId: cond1Id,
+    nome: "Mariana Souza Ribeiro",
+    telefone: "(11) 99333-4444",
+    lote: "08",
+    quadra: "A",
+    senha: "$2b$10$hashSenhaMariana456",
+    status: "aprovado"
+  },
+  {
+    _id: morador3Id,
+    condominioId: cond2Id,
+    nome: "Lucas Ferreira Lima",
+    telefone: "(11) 99555-6666",
+    lote: "22",
+    quadra: "F",
+    senha: "$2b$10$hashSenhaLucas789",
+    status: "pendente"
+  }
+]);
+
+// ==========================================
+// 4. CATEGORIAS SUGERIDAS (OUTROS)
+// ==========================================
+db.categoriasSugeridas.insertMany([
+  {
+    textoOriginal: "Instalação de Ar Condicionado",
+    textoNormalizado: "instalacao de ar condicionado",
+    contagem: 4,
+    status: "pendente"
+  },
+  {
+    textoOriginal: "Marcenaria e Planejados",
+    textoNormalizado: "marcenaria e planejados",
+    contagem: 7,
+    status: "promovida"
+  },
+  {
+    textoOriginal: "Conserto de Celular",
+    textoNormalizado: "conserto de celular",
+    contagem: 1,
+    status: "rejeitada"
+  }
+]);
+
+// ==========================================
+// 5. PRESTADORES
+// ==========================================
+const prestador1Id = new ObjectId();
+const prestador2Id = new ObjectId();
+const prestador3Id = new ObjectId();
+
+db.prestadores.insertMany([
+  {
+    _id: prestador1Id,
+    condominioId: cond1Id,
+    nome: "Roberto Mendes (Eletricista)",
+    telefone: "(11) 98888-1111",
+    categorias: [catEletricaId],
+    mediaAvaliacao: 3,
+    origem: "Indicação Morador - Lote 14"
+  },
+  {
+    _id: prestador2Id,
+    condominioId: cond1Id,
+    nome: "Cláudio Santos (Encanador)",
+    telefone: "(11) 98888-2222",
+    categorias: [catHidraulicaId],
+    mediaAvaliacao: 2,
+    origem: "Administração do Condomínio"
+  },
+  {
+    _id: prestador3Id,
+    condominioId: cond2Id,
+    nome: "Reformas & Pinturas Express",
+    telefone: "(11) 98888-3333",
+    categorias: [catPinturaId, catHidraulicaId],
+    mediaAvaliacao: 3,
+    origem: "Indicação ADM"
+  }
+]);
+
+// ==========================================
+// 6. AVALIACOES
+// ==========================================
+const avaliacao1Id = new ObjectId();
+const avaliacao2Id = new ObjectId();
+const avaliacao3Id = new ObjectId();
+
+db.avaliacoes.insertMany([
+  {
+    _id: avaliacao1Id,
+    prestadorId: prestador1Id,
+    autorId: morador1Id,
+    nota: NumberInt(3),
+    comentario: "Excelente serviço, consertou o quadro elétrico rápido e com preço justo.",
+    status: "aprovada",
+    createdAt: new Date()
+  },
+  {
+    _id: avaliacao2Id,
+    prestadorId: prestador2Id,
+    autorId: morador2Id,
+    nota: NumberInt(2),
+    comentario: "Resolveu o vazamento, mas demorou um pouco para chegar no horário combinado.",
+    status: "aprovada",
+    createdAt: new Date()
+  },
+  {
+    _id: avaliacao3Id,
+    prestadorId: prestador3Id,
+    autorId: morador3Id,
+    nota: NumberInt(3),
+    comentario: "Pintou a fachada inteira com muito capricho.",
+    status: "pendente",
+    createdAt: new Date()
+  }
+]);
+
+// ==========================================
+// 7. DENUNCIAS
+// ==========================================
+db.denuncias.insertMany([
+  {
+    tipo: "Denuncia perfil",
+    Prestador_Id: prestador2Id,
+    Morador_Id: morador1Id,
+    motivo: "Número de telefone informado não pertence mais ao prestador.",
+    status: "pendente",
+    createdAt: new Date()
+  },
+  {
+    tipo: "denunciar comentario",
+    Prestador_Id: prestador1Id,
+    Morador_Id: morador2Id,
+    motivo: "Comentário continha palavras ofensivas sobre o prestador.",
+    status: "removida",
+    createdAt: new Date()
+  },
+  {
+    tipo: "Denuncia perfil",
+    Prestador_Id: prestador3Id,
+    Morador_Id: morador3Id,
+    motivo: "Prestador não compareceu ao condomínio na data acordada.",
+    status: "pendente",
+    createdAt: new Date()
+  }
+]);

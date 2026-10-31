@@ -1,0 +1,228 @@
+// 1. Coleção: condominios
+db.createCollection("condominios", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["nome", "cnpj", "email", "telefone", "senhaAdmHash", "codigoAcessoMoradores"],
+      properties: {
+        _id: { bsonType: "objectId" },
+        nome: { bsonType: "string", description: "Nome do condomínio" },
+        cnpj: { bsonType: "string", description: "CNPJ do condomínio" },
+        email: { bsonType: "string", pattern: "^.+@.+$", description: "E-mail de contato válido" },
+        telefone: { bsonType: "string", description: "Telefone de contato" },
+        senhaAdmHash: { bsonType: "string", description: "Hash da senha do administrador" },
+        codigoAcessoMoradores: { bsonType: "string", description: "Código de acesso para cadastro dos moradores" }
+      }
+    }
+  }
+});
+
+// Índices para condominios
+db.condominios.createIndex({ cnpj: 1 }, { unique: true });
+db.condominios.createIndex({ email: 1 }, { unique: true });
+
+
+// 2. Coleção: moradores
+db.createCollection("moradores", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["condominioId", "nome", "telefone", "lote", "quadra", "senha", "status"],
+      properties: {
+        _id: { bsonType: "objectId" },
+        condominioId: { bsonType: "objectId", description: "Referência ao condomínio" },
+        nome: { bsonType: "string", description: "Nome do morador" },
+        telefone: { bsonType: "string", description: "Telefone do morador" },
+        lote: { bsonType: "string", description: "Lote" },
+        quadra: { bsonType: "string", description: "Quadra" },
+        senha: { bsonType: "string", description: "Senha criptografada" },
+        status: { 
+          enum: ["pendente", "aprovado"], 
+          description: "Status de aprovação do morador" 
+        }
+      }
+    }
+  }
+});
+
+// Índices para moradores
+db.moradores.createIndex({ condominioId: 1 });
+db.moradores.createIndex({ condominioId: 1, telefone: 1 }, { unique: true });
+
+
+// 3. Coleção: categorias
+db.createCollection("categorias", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["nome", "slug"],
+      properties: {
+        _id: { bsonType: "objectId" },
+        nome: { bsonType: "string", description: "Nome de exibição da categoria" },
+        slug: { bsonType: "string", description: "Slug normalizado para URLs e buscas" },
+        icone: { bsonType: ["string", "null"], description: "Nome do ícone da biblioteca (opcional)" }
+      }
+    }
+  }
+});
+
+// Índices para categorias
+db.categorias.createIndex({ slug: 1 }, { unique: true });
+
+
+// 4. Coleção: categoriasSugeridas
+db.createCollection("categoriasSugeridas", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["textoOriginal", "textoNormalizado", "contagem", "status"],
+      properties: {
+        _id: { bsonType: "objectId" },
+        textoOriginal: { bsonType: "string", description: "Texto digitado pelo usuário" },
+        textoNormalizado: { bsonType: "string", description: "Texto em minúsculas e sem pontuações para agregação" },
+        contagem: { bsonType: "number", minimum: 1, description: "Quantidade de vezes sugerida" },
+        status: { 
+          enum: ["pendente", "promovida", "rejeitada"], 
+          description: "Status da sugestão" 
+        }
+      }
+    }
+  }
+});
+
+// Índices para categorias sugeridas
+db.categoriasSugeridas.createIndex({ textoNormalizado: 1 }, { unique: true });
+db.categoriasSugeridas.createIndex({ status: 1 });
+
+
+// 5. Coleção: prestadores
+db.createCollection("prestadores", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["condominioId", "nome", "telefone", "categorias", "origem"],
+      properties: {
+        _id: { bsonType: "objectId" },
+        condominioId: { bsonType: "objectId", description: "Referência ao condomínio" },
+        nome: { bsonType: "string", description: "Nome do prestador" },
+        telefone: { bsonType: "string", description: "Telefone de contato" },
+        categorias: {
+          bsonType: "array",
+          minItems: 1,
+          items: { bsonType: "objectId" },
+          description: "Lista de ObjectIds referenciando a coleção categorias"
+        },
+        mediaAvaliacao: {
+          bsonType: ["number", "null"],
+          minimum: 1,
+          maximum: 3,
+          description: "Média calculada de 1 a 3 estrelas"
+        },
+        origem: { bsonType: "string", description: "Indicação de origem do cadastro" }
+      }
+    }
+  }
+});
+
+// Índices para prestadores
+db.prestadores.createIndex({ condominioId: 1 });
+db.prestadores.createIndex({ categorias: 1 });
+db.prestadores.createIndex({ condominioId: 1, mediaAvaliacao: -1 });
+
+// ==========================================
+// 5.6 Coleção: avaliacoes
+// ==========================================
+db.createCollection("avaliacoes", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["prestadorId", "autorId", "nota", "status"],
+      properties: {
+        _id: { bsonType: "objectId" },
+        prestadorId: { 
+          bsonType: "objectId", 
+          description: "Referência ao prestador avaliado" 
+        },
+        autorId: { 
+          bsonType: "objectId", 
+          description: "Referência ao morador ou ADM que avaliou" 
+        },
+        nota: {
+          bsonType: "int",
+          minimum: 1,
+          maximum: 3,
+          description: "Nota de 1 a 3 estrelas"
+        },
+        comentario: { 
+          bsonType: ["string", "null"], 
+          description: "Comentário opcional da avaliação" 
+        },
+        status: {
+          enum: ["pendente", "aprovada"],
+          description: "Status da avaliação (indicações de ADM entram já aprovadas)"
+        },
+        createdAt: {
+          bsonType: "date",
+          description: "Data de criação do registro"
+        }
+      }
+    }
+  }
+});
+
+// Índices para avaliacoes
+// 1. Busca rápida de avaliações de um prestador filtradas por status (ex: listar apenas aprovadas)
+db.avaliacoes.createIndex({ prestadorId: 1, status: 1 });
+
+// 2. Busca pelo autor da avaliação (ex: histórico de avaliações do morador/ADM)
+db.avaliacoes.createIndex({ autorId: 1 });
+
+
+// ==========================================
+// 5.7 Coleção: denuncias
+// ==========================================
+db.createCollection("denuncias", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["tipo", "Prestador_Id", "Morador_Id", "status"],
+      properties: {
+        _id: { bsonType: "objectId" },
+        tipo: {
+          enum: ["Denuncia perfil", "denunciar comentario"],
+          description: "Tipo de denúncia realizada"
+        },
+        Prestador_Id: {
+          bsonType: "objectId",
+          description: "Referência ao prestador (ou item) denunciado"
+        },
+        Morador_Id: {
+          bsonType: "objectId",
+          description: "Referência ao morador que realizou a denúncia"
+        },
+        motivo: {
+          bsonType: ["string", "null"],
+          description: "Motivo informado (opcional)"
+        },
+        status: {
+          enum: ["pendente", "removida"],
+          description: "Status da denúncia"
+        },
+        createdAt: {
+          bsonType: "date",
+          description: "Data da denúncia"
+        }
+      }
+    }
+  }
+});
+
+// Índices para denuncias
+// 1. Painel do ADM: listar denúncias pendentes rapidamente
+db.denuncias.createIndex({ status: 1 });
+
+// 2. Histórico de denúncias associadas ao prestador/alvo
+db.denuncias.createIndex({ Prestador_Id: 1 });
+
+// 3. Auditoria/busca de denúncias enviadas por um morador específico
+db.denuncias.createIndex({ Morador_Id: 1 });
