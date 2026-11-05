@@ -2,6 +2,7 @@ import multer from 'multer';
 import { multerConfig } from '../config/multer';
 import { CategoriaController } from '../controllers/CategoriaController'
 
+
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
 import { authMiddleware, authorizeRoles } from '../middlewares/auth';
@@ -59,5 +60,8 @@ apiRouter.use('/moradores', authorizeRoles('admin'), createResourceRoutes(morado
 // Rotas de Categoria com suporte a Upload de Arquivo
 apiRouter.post('/categorias', upload.single('icone'), CategoriaController.create);
 apiRouter.put('/categorias/:id', upload.single('icone'), CategoriaController.update);
+
+// Rota para download do ícone da categoria
+apiRouter.get('/categorias/:id/download', CategoriaController.downloadIcone);
 
 export default apiRouter;
